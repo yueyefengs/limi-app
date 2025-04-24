@@ -1,0 +1,127 @@
+{
+	"pages": [ //pages数组中第一项表示应用启动页，参考：https://uniapp.dcloud.io/collocation/pages
+		{
+			"path": "pages/home/index",
+			"style": {
+				"navigationBarTitleText": "首页",
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/chat/index",
+			"style": {
+				"navigationBarTitleText": "智能聊天",
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/content/index",
+			"style": {
+				"navigationBarTitleText": "内容推荐",
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/profile/index",
+			"style": {
+				"navigationBarTitleText": "个人中心",
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/content/detail",
+			"style": {
+				"navigationBarTitleText": "内容详情",
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/chat/history",
+			"style": {
+				"navigationBarTitleText": "聊天记录",
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/settings/index",
+			"style": {
+				"navigationBarTitleText": "设置",
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/settings/parental-control",
+			"style": {
+				"navigationBarTitleText": "家长控制",
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/settings/notifications",
+			"style": {
+				"navigationBarTitleText": "通知设置",
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/settings/help-center",
+			"style": {
+				"navigationBarTitleText": "帮助中心",
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/login/index",
+			"style": {
+				"navigationBarTitleText": "登录",
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/login/register",
+			"style": {
+				"navigationBarTitleText": "注册",
+				"navigationStyle": "custom"
+			}
+		}
+	],
+	"globalStyle": {
+		"navigationBarTextStyle": "black",
+		"navigationBarTitleText": "小智App",
+		"navigationBarBackgroundColor": "#FFFFFF",
+		"backgroundColor": "#F5F5F5"
+	},
+	"tabBar": {
+		"color": "#6c757d",
+		"selectedColor": "#4a90e2",
+		"backgroundColor": "#FFFFFF",
+		"borderStyle": "black",
+		"list": [
+			{
+				"pagePath": "pages/home/index",
+				"text": "首页",
+				"iconPath": "static/images/tab-home.png",
+				"selectedIconPath": "static/images/tab-home-active.png"
+			},
+			{
+				"pagePath": "pages/chat/index",
+				"text": "聊天",
+				"iconPath": "static/images/tab-chat.png",
+				"selectedIconPath": "static/images/tab-chat-active.png"
+			},
+			{
+				"pagePath": "pages/content/index",
+				"text": "内容",
+				"iconPath": "static/images/tab-content.png",
+				"selectedIconPath": "static/images/tab-content-active.png"
+			},
+			{
+				"pagePath": "pages/profile/index",
+				"text": "我的",
+				"iconPath": "static/images/tab-profile.png",
+				"selectedIconPath": "static/images/tab-profile-active.png"
+			}
+		]
+	},
+	"uniIdRouter": {}
+}
