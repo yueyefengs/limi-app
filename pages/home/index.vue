@@ -1,106 +1,87 @@
 <template>
 	<view class="home-container">
-		<!-- Status Bar -->
-		<view class="status-bar">
-			<text class="time">{{ currentTime }}</text>
-			<view class="icons">
-				<text class="iconfont icon-signal"></text>
-				<text class="iconfont icon-wifi"></text>
-				<text class="iconfont icon-battery-full"></text>
+		<!-- Main Header -->
+		<view class="main-header">
+			<view class="header-greeting">你好，家长!</view>
+			<view class="header-status-line">小智今天状态良好，电量充足</view>
+			<view class="header-connection-status">
+				<view class="status-dot"></view>
+				<text>已连接 · 电量 {{ batteryLevel }}%</text>
 			</view>
-		</view>
-		
-		<!-- Dashboard Header -->
-		<view class="dashboard-header">
-			<text class="header-title">你好，小朋友！</text>
-			<text class="header-subtitle">今天是个美好的学习日~</text>
-			<view class="device-status">
-				<text class="iconfont icon-bluetooth"></text>
-				<text>已连接智能玩具</text>
-			</view>
-			
-			<view class="usage-stats">
+			<view class="usage-info-box">
 				<view class="usage-item">
-					<text class="value">45分钟</text>
+					<text class="value">{{ usageTime }}</text>
 					<text class="label">今日使用时长</text>
 				</view>
 				<view class="usage-item">
-					<text class="value">92分</text>
-					<text class="label">学习积分</text>
+					<text class="value">{{ timeLimit }}</text>
+					<text class="label">时长限制</text>
 				</view>
 			</view>
 		</view>
-		
-		<!-- Stats Row -->
-		<view class="stats-row">
-			<view class="stat-card">
-				<text class="number">5</text>
-				<text class="label">故事</text>
+
+		<!-- Action Buttons -->
+		<view class="action-buttons">
+			<view class="action-button" @click="navigateTo('/pages/chat/history')">
+				<text class="iconfont icon-history action-icon"></text>
+				<text class="action-text">聊天记录</text>
 			</view>
-			<view class="stat-card">
-				<text class="number">3</text>
-				<text class="label">游戏</text>
-			</view>
-			<view class="stat-card">
-				<text class="number">12</text>
-				<text class="label">对话</text>
+			<view class="action-button" @click="navigateTo('/pages/settings/parental-controls')">
+				<text class="iconfont icon-shield action-icon"></text>
+				<text class="action-text">家长控制</text>
 			</view>
 		</view>
-		
-		<!-- Quick Actions -->
-		<view class="quick-actions">
-			<view class="action-button" @click="navigateTo('/pages/chat/index')">
-				<view class="action-icon">
-					<text class="iconfont icon-message"></text>
-				</view>
-				<text class="action-text">聊一聊</text>
-			</view>
-			<view class="action-button" @click="navigateTo('/pages/content/index')">
-				<view class="action-icon">
-					<text class="iconfont icon-play"></text>
-				</view>
-				<text class="action-text">听故事</text>
-			</view>
-			<view class="action-button" @click="navigateTo('/pages/profile/index')">
-				<view class="action-icon">
-					<text class="iconfont icon-user"></text>
-				</view>
-				<text class="action-text">我的</text>
-			</view>
-		</view>
-		
+
 		<!-- Recent Activity Section -->
-		<view class="activity-section">
+		<view class="section recent-activity">
 			<view class="section-header">
-				<text class="section-title">最近活动</text>
-				<text class="see-all" @click="navigateTo('/pages/profile/index')">查看全部</text>
+				<text class="section-title">近期活动</text>
+				<text class="see-all" @click="navigateTo('/pages/profile/activity-log')">查看全部</text>
 			</view>
-			
 			<view class="activity-card" v-for="(activity, index) in recentActivities" :key="index">
-				<view class="activity-icon">
+				<view class="activity-icon-wrapper">
 					<text class="iconfont" :class="activity.icon"></text>
 				</view>
 				<view class="activity-info">
 					<text class="activity-title">{{ activity.title }}</text>
-					<text class="activity-subtitle">{{ activity.subtitle }}</text>
+					<text class="activity-details">{{ activity.details }}</text>
 					<text class="activity-time">{{ activity.time }}</text>
 				</view>
 			</view>
 		</view>
-		
+
 		<!-- Recommended Content Section -->
-		<view class="content-section">
+		<view class="section recommended-content">
 			<view class="section-header">
 				<text class="section-title">推荐内容</text>
-				<text class="see-all" @click="navigateTo('/pages/content/index')">查看全部</text>
+				<text class="see-all" @click="navigateTo('/pages/content/index')">更多推荐</text>
 			</view>
-			
 			<view class="content-card" v-for="(content, index) in recommendedContent" :key="index" @click="navigateTo('/pages/content/detail?id=' + content.id)">
 				<image class="content-image" :src="content.image" mode="aspectFill"></image>
 				<view class="content-info">
 					<text class="content-title">{{ content.title }}</text>
 					<text class="content-subtitle">{{ content.subtitle }}</text>
 				</view>
+			</view>
+		</view>
+
+		<!-- Bottom Navigation Bar -->
+		<view class="navbar">
+			<view class="nav-item active">
+				<text class="iconfont icon-filled-home nav-icon"></text>
+				<text>首页</text>
+			</view>
+			<view class="nav-item" @click="switchTab('/pages/chat/index')">
+				<text class="iconfont icon-filled-chat nav-icon"></text>
+				<text>聊天</text>
+			</view>
+			<view class="nav-item" @click="switchTab('/pages/content/index')">
+				<text class="iconfont icon-filled-discover nav-icon"></text>
+				<text>发现</text>
+			</view>
+			<view class="nav-item" @click="switchTab('/pages/profile/index')">
+				<text class="iconfont icon-filled-profile nav-icon"></text>
+				<text>我的</text>
 			</view>
 		</view>
 	</view>
@@ -110,201 +91,173 @@
 export default {
 	data() {
 		return {
-			currentTime: '9:41',
+			usageTime: '1:42',
+			timeLimit: '2:30',
+			batteryLevel: 78,
 			recentActivities: [
 				{
-					title: '完成了"恐龙世界"故事',
-					subtitle: '听故事并回答了问题',
-					time: '今天 14:30',
-					icon: 'icon-book'
+					title: '童话故事时间',
+					details: '听了《小红帽》的故事',
+					time: '15分钟前',
+					icon: 'icon-book-read'
 				},
 				{
-					title: '进行了15分钟的聊天',
-					subtitle: '聊了关于动物的话题',
-					time: '今天 10:15',
-					icon: 'icon-message'
-				},
-				{
-					title: '完成了数字配对游戏',
-					subtitle: '获得了5颗星',
-					time: '昨天 16:20',
-					icon: 'icon-game-controller'
+					title: '动物知识问答',
+					details: '了解了长颈鹿的生活习性',
+					time: '昨天',
+					icon: 'icon-question-circle'
 				}
 			],
 			recommendedContent: [
 				{
 					id: 1,
-					title: '小兔子的奇幻冒险',
-					subtitle: '适合3-5岁 | 10分钟',
-					image: '/static/images/story1.jpg'
+					title: '恐龙世界探险',
+					subtitle: '适合4-7岁 · 科普知识',
+					image: '/static/images/dinosaur.png'
 				},
 				{
 					id: 2,
-					title: '认识动物朋友们',
-					subtitle: '适合4-6岁 | 互动游戏',
-					image: '/static/images/game1.jpg'
-				},
-				{
-					id: 3,
-					title: '数字王国大探险',
-					subtitle: '适合5-7岁 | 学习数学',
-					image: '/static/images/learn1.jpg'
+					title: '经典儿歌合集',
+					subtitle: '适合2-5岁 · 音乐启蒙',
+					image: '/static/images/songs.png'
 				}
 			]
 		}
 	},
+	onLoad() {
+		uni.hideTabBar(); // Hide default system tab bar
+	},
 	methods: {
 		navigateTo(url) {
 			uni.navigateTo({
-				url: url
-			})
+				url: url,
+				fail: (err) => {
+					console.error("Navigation failed:", err);
+					uni.showToast({ title: '页面开发中', icon: 'none' });
+				}
+			});
 		},
-		updateTime() {
-			const now = new Date()
-			const hours = now.getHours()
-			const minutes = now.getMinutes()
-			this.currentTime = `${hours}:${minutes < 10 ? '0' + minutes : minutes}`
+		switchTab(url) {
+			uni.switchTab({
+				url: url,
+				fail: (err) => {
+					console.error("Tab switch failed:", err);
+					uni.showToast({ title: '页面切换失败', icon: 'none' });
+				}
+			});
 		}
-	},
-	onLoad() {
-		this.updateTime()
-		// 更新时间的定时器，每分钟更新一次
-		setInterval(() => {
-			this.updateTime()
-		}, 60000)
 	}
 }
 </script>
 
 <style>
 .home-container {
-	padding: 0 30rpx 120rpx;
+	background-color: #f4f5f9;
+	padding-bottom: 140rpx; /* Add padding for the fixed navbar */
+	min-height: 100vh;
 }
 
-.dashboard-header {
-	background: linear-gradient(135deg, #4a90e2, #7454e9);
+/* Updated Main Header Styles */
+.main-header {
+	display: flex;
+	flex-direction: column;
+	background: linear-gradient(135deg, #7b7ff6, #a37af4);
+	border-radius: 0 0 40rpx 40rpx;
+	padding: 40rpx 30rpx;
 	color: white;
-	border-radius: 30rpx;
-	padding: 40rpx;
-	margin-bottom: 40rpx;
-	position: relative;
 }
 
-.header-title {
+.header-greeting {
 	font-size: 44rpx;
 	font-weight: bold;
 	margin-bottom: 10rpx;
-	display: block;
 }
 
-.header-subtitle {
+.header-status-line {
 	font-size: 28rpx;
 	opacity: 0.9;
 	margin-bottom: 20rpx;
-	display: block;
 }
 
-.device-status {
-	display: inline-block;
+.header-connection-status {
+	display: inline-flex; /* Use inline-flex to keep elements on one line */
+	align-items: center;
 	background-color: rgba(255, 255, 255, 0.2);
 	border-radius: 30rpx;
 	padding: 8rpx 20rpx;
-	font-size: 24rpx;
+	font-size: 26rpx;
+	margin-bottom: 30rpx;
+	max-width: max-content; /* Ensure bubble doesn't stretch full width */
 }
 
-.device-status .iconfont {
-	margin-right: 10rpx;
+.status-dot {
+	width: 16rpx;
+	height: 16rpx;
+	background-color: #ffffff;
+	border-radius: 50%;
+	margin-right: 15rpx;
 }
 
-.usage-stats {
+.usage-info-box {
 	display: flex;
 	justify-content: space-between;
-	margin-top: 30rpx;
+	background-color: rgba(255, 255, 255, 0.1);
+	border-radius: 24rpx;
+	padding: 30rpx 40rpx; /* Adjusted padding */
 }
 
 .usage-item {
 	text-align: center;
-	background-color: rgba(255, 255, 255, 0.1);
-	border-radius: 24rpx;
-	padding: 20rpx;
-	flex-basis: 48%;
 }
 
 .usage-item .value {
-	font-size: 44rpx;
+	font-size: 48rpx;
 	font-weight: bold;
-	margin-bottom: 10rpx;
-	display: block;
+	margin-bottom: 8rpx;
 }
 
 .usage-item .label {
-	font-size: 24rpx;
-	opacity: 0.9;
+	font-size: 26rpx;
+	opacity: 0.8;
 }
 
-.stats-row {
+/* Action Buttons Styles (no change needed) */
+.action-buttons {
 	display: flex;
 	justify-content: space-between;
-	margin-bottom: 40rpx;
-}
-
-.stat-card {
-	background-color: white;
-	border-radius: 24rpx;
-	padding: 30rpx;
-	width: 30%;
-	text-align: center;
-	box-shadow: 0 4rpx 10rpx rgba(0,0,0,0.05);
-}
-
-.stat-card .number {
-	font-size: 40rpx;
-	font-weight: bold;
-	color: #4a90e2;
-	margin-bottom: 10rpx;
-	display: block;
-}
-
-.stat-card .label {
-	font-size: 24rpx;
-	color: #6c757d;
-}
-
-.quick-actions {
-	display: flex;
-	gap: 20rpx;
-	margin-bottom: 40rpx;
+	margin: 40rpx 30rpx;
+	gap: 30rpx;
 }
 
 .action-button {
-	display: flex;
-	align-items: center;
-	background-color: white;
-	border-radius: 20rpx;
-	padding: 20rpx 30rpx;
-	box-shadow: 0 4rpx 10rpx rgba(0,0,0,0.05);
 	flex: 1;
-}
-
-.action-icon {
-	width: 80rpx;
-	height: 80rpx;
-	border-radius: 20rpx;
-	background-color: #f0f5ff;
+	background-color: white;
+	border-radius: 24rpx;
+	padding: 30rpx 0;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	margin-right: 20rpx;
-	color: #4a90e2;
+	box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.05);
+	font-size: 30rpx;
+	color: #333;
 }
 
-.action-text {
-	font-size: 28rpx;
-	font-weight: 500;
+.action-icon {
+	font-size: 44rpx;
+	margin-right: 15rpx;
+	color: #6c757d;
 }
 
-.activity-section, .content-section {
-	margin-bottom: 40rpx;
+.action-button:first-child .action-icon {
+	color: #4a90e2; /* Blue for history */
+}
+.action-button:last-child .action-icon {
+	color: #f5a623; /* Orange for parental control (shield) */
+}
+
+/* Section Styles (no change needed) */
+.section {
+	margin: 40rpx 30rpx;
 }
 
 .section-header {
@@ -316,67 +269,159 @@ export default {
 
 .section-title {
 	font-size: 36rpx;
-	font-weight: 600;
+	font-weight: bold;
+	color: #333;
 }
 
 .see-all {
-	color: #4a90e2;
 	font-size: 28rpx;
+	color: #4a90e2;
 }
 
-.activity-card, .content-card {
+/* Activity Card Styles (no change needed) */
+.activity-card {
 	background-color: white;
 	border-radius: 24rpx;
-	overflow: hidden;
+	padding: 30rpx;
+	display: flex;
+	align-items: center;
 	margin-bottom: 20rpx;
-	box-shadow: 0 4rpx 10rpx rgba(0,0,0,0.05);
-	display: flex;
-	align-items: center;
+	box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.03);
 }
 
-.activity-icon {
-	width: 100rpx;
-	height: 100rpx;
-	background-color: #f8f9fa;
-	border-radius: 24rpx;
+.activity-icon-wrapper {
+	width: 80rpx;
+	height: 80rpx;
+	border-radius: 40rpx;
+	background-color: #eef1f8;
 	display: flex;
-	align-items: center;
 	justify-content: center;
-	margin: 20rpx;
+	align-items: center;
+	margin-right: 25rpx;
+}
+
+.activity-icon-wrapper .iconfont {
+	font-size: 44rpx;
 	color: #4a90e2;
-	font-size: 40rpx;
 }
 
-.activity-info, .content-info {
+.activity-info {
 	flex: 1;
-	padding: 20rpx;
 }
 
-.activity-title, .content-title {
+.activity-title {
 	font-size: 32rpx;
-	font-weight: 500;
-	margin-bottom: 10rpx;
+	color: #333;
+	margin-bottom: 8rpx;
 	display: block;
 }
 
-.activity-subtitle, .content-subtitle {
-	font-size: 26rpx;
-	color: #6c757d;
+.activity-details {
+	font-size: 28rpx;
+	color: #666;
+	margin-bottom: 8rpx;
 	display: block;
 }
 
 .activity-time {
 	font-size: 24rpx;
-	color: #6c757d;
-	margin-top: 10rpx;
-	display: block;
+	color: #999;
+}
+
+/* Content Card Styles (no change needed) */
+.content-card {
+	background-color: white;
+	border-radius: 24rpx;
+	padding: 30rpx;
+	display: flex;
+	align-items: center;
+	margin-bottom: 20rpx;
+	box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.03);
 }
 
 .content-image {
 	width: 140rpx;
 	height: 140rpx;
-	object-fit: cover;
-	margin: 20rpx;
 	border-radius: 16rpx;
+	margin-right: 25rpx;
+	background-color: #eee; /* Placeholder color */
 }
+
+.content-info {
+	flex: 1;
+}
+
+.content-title {
+	font-size: 32rpx;
+	font-weight: bold;
+	color: #333;
+	margin-bottom: 10rpx;
+	display: block;
+}
+
+.content-subtitle {
+	font-size: 26rpx;
+	color: #666;
+}
+
+/* Bottom Navbar Styles */
+.navbar {
+	height: 120rpx;
+	position: fixed;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	background-color: white;
+	display: flex;
+	justify-content: space-around;
+	align-items: center;
+	border-top: 1px solid #eee;
+	z-index: 100;
+}
+
+.nav-item {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	color: #999;
+	font-size: 24rpx;
+	padding: 10rpx 0;
+}
+
+.nav-icon {
+	font-size: 48rpx; /* Slightly larger icons */
+	margin-bottom: 4rpx;
+}
+
+.nav-item.active {
+	color: #4a90e2;
+}
+
+/* Iconfont definition */
+@font-face {
+	font-family: 'iconfont';  
+	src: url('https://at.alicdn.com/t/font_8d5l8fzk5b87iudi.ttf') format('truetype');
+}
+
+.iconfont {
+	font-family: "iconfont" !important;
+	font-style: normal;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+/* Icons for nav bar (Update codes as needed for the specific filled look) */
+.icon-filled-home:before { content: "\e6b8"; } /* Example: Using a filled home code */
+.icon-filled-chat:before { content: "\e65f"; } /* Example: Using a filled chat code */
+.icon-filled-discover:before { content: "\e68e"; } /* Example: Using a filled discover code */
+.icon-filled-profile:before { content: "\e7ae"; } /* Example: Using a filled profile code */
+
+/* Icons for activity list */
+.icon-book-read:before { content: "\e7b8"; }
+.icon-question-circle:before { content: "\e6a3"; }
+
+/* Icons for action buttons */
+.icon-history:before { content: "\e752"; }
+.icon-shield:before { content: "\e608"; } /* Example: Using a shield icon for parental control */
+
 </style> 

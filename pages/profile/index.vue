@@ -461,7 +461,7 @@ export default {
 
 @font-face {
 	font-family: 'iconfont';  
-	src: url('https://at.alicdn.com/t/font_3352517_qm9yltw8zw.ttf') format('truetype');
+	src: url('https://at.alicdn.com/t/font_8d5l8fzk5b87iudi.ttf') format('truetype');
 }
 
 .iconfont {
