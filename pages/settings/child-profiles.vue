@@ -5,50 +5,52 @@
       <view class="back-button" @click="navigateBack">
         <image src="/static/icons/back.png" mode="aspectFit" class="back-icon"></image>
       </view>
-      <text class="header-title">孩子档案管理</text>
+      <text class="header-title">角色设定</text>
       <view style="width: 40rpx;"></view> <!-- Empty space for alignment -->
     </view>
 
-    <!-- Current Profile -->
+    <!-- Current Role Profile -->
     <view class="current-profile-section" v-if="activeProfile">
-      <text class="section-title">当前使用的孩子档案</text>
+      <text class="section-title">当前使用的角色</text>
       <view class="profile-card active">
         <view class="profile-avatar">
           <image :src="activeProfile.avatar || defaultAvatar" mode="aspectFill" class="avatar-image"></image>
         </view>
         <view class="profile-info">
           <view class="profile-name-row">
-            <text class="profile-name">{{ activeProfile.name }}</text>
+            <text class="profile-name">{{ activeProfile.roleName || activeProfile.name }}</text>
             <view class="active-badge">
               <text>当前使用</text>
             </view>
           </view>
-          <text class="profile-details">{{ activeProfile.age }}岁 · {{ getGenderText(activeProfile.gender) }}</text>
+          <text class="profile-details">{{ activeProfile.roleTemplate || "自定义角色" }}</text>
           <view class="profile-interests">
-            <view class="interest-tag" v-for="(interest, idx) in getInterestNames(activeProfile.interests).slice(0, 3)" :key="idx">
-              <text>{{ interest }}</text>
+            <view class="interest-tag">
+              <text>{{ activeProfile.voiceType || "默认音色" }}</text>
             </view>
-            <text class="more-interests" v-if="activeProfile.interests.length > 3">+{{ activeProfile.interests.length - 3 }}</text>
+            <view class="interest-tag">
+              <text>{{ activeProfile.modelType || "默认模型" }}</text>
+            </view>
           </view>
         </view>
       </view>
     </view>
 
-    <!-- Other Profiles -->
+    <!-- Other Role Profiles -->
     <view class="other-profiles-section">
       <view class="section-header">
-        <text class="section-title">{{ activeProfile ? '其他孩子档案' : '孩子档案列表' }}</text>
+        <text class="section-title">{{ activeProfile ? '其他角色' : '角色列表' }}</text>
         <view class="add-profile-button" @click="navigateToAddProfile">
           <image src="/static/icons/add.png" mode="aspectFit" class="add-icon"></image>
-          <text>添加档案</text>
+          <text>添加角色</text>
         </view>
       </view>
 
       <view class="empty-state" v-if="otherProfiles.length === 0">
         <image src="/static/images/empty-profiles.png" mode="aspectFit" class="empty-image"></image>
-        <text class="empty-text">还没有添加孩子档案</text>
-        <text class="empty-hint">添加孩子档案以个性化内容体验</text>
-        <button class="create-profile-button" @click="navigateToAddProfile">创建档案</button>
+        <text class="empty-text">还没有添加角色</text>
+        <text class="empty-hint">添加角色以定制不同的交互体验</text>
+        <button class="create-profile-button" @click="navigateToAddProfile">创建角色</button>
       </view>
 
       <view class="profile-list" v-else>
@@ -61,13 +63,15 @@
             <image :src="profile.avatar || defaultAvatar" mode="aspectFill" class="avatar-image"></image>
           </view>
           <view class="profile-info">
-            <text class="profile-name">{{ profile.name }}</text>
-            <text class="profile-details">{{ profile.age }}岁 · {{ getGenderText(profile.gender) }}</text>
+            <text class="profile-name">{{ profile.roleName || profile.name }}</text>
+            <text class="profile-details">{{ profile.roleTemplate || "自定义角色" }}</text>
             <view class="profile-interests">
-              <view class="interest-tag" v-for="(interest, idx) in getInterestNames(profile.interests).slice(0, 3)" :key="idx">
-                <text>{{ interest }}</text>
+              <view class="interest-tag">
+                <text>{{ profile.voiceType || "默认音色" }}</text>
               </view>
-              <text class="more-interests" v-if="profile.interests.length > 3">+{{ profile.interests.length - 3 }}</text>
+              <view class="interest-tag">
+                <text>{{ profile.modelType || "默认模型" }}</text>
+              </view>
             </view>
           </view>
           <view class="profile-actions">
@@ -82,13 +86,96 @@
       </view>
     </view>
 
+    <!-- Role Templates Sheet -->
+    <uni-popup ref="roleTemplatePopup" type="bottom">
+      <view class="popup-content">
+        <view class="popup-header">
+          <text class="popup-title">选择角色模板</text>
+          <view class="popup-close" @click="closeRoleTemplatePopup">
+            <text>×</text>
+          </view>
+        </view>
+        <view class="template-list">
+          <view 
+            class="template-item" 
+            v-for="template in roleTemplates" 
+            :key="template.id"
+            @click="selectRoleTemplate(template)"
+          >
+            <view class="template-content">
+              <text class="template-name">{{ template.name }}</text>
+              <text class="template-desc">{{ template.description }}</text>
+            </view>
+            <radio :checked="currentEditingProfile.roleTemplate === template.id" color="#2196f3" />
+          </view>
+        </view>
+      </view>
+    </uni-popup>
+
+    <!-- Voice Type Sheet -->
+    <uni-popup ref="voiceTypePopup" type="bottom">
+      <view class="popup-content">
+        <view class="popup-header">
+          <text class="popup-title">选择角色音色</text>
+          <view class="popup-close" @click="closeVoiceTypePopup">
+            <text>×</text>
+          </view>
+        </view>
+        <view class="voice-list">
+          <view 
+            class="voice-item" 
+            v-for="voice in voiceTypes" 
+            :key="voice.id"
+            @click="selectVoiceType(voice)"
+          >
+            <view class="voice-content">
+              <text class="voice-name">{{ voice.name }}</text>
+              <text class="voice-desc">{{ voice.description }}</text>
+            </view>
+            <view class="voice-actions">
+              <view class="play-button" @click.stop="playVoiceSample(voice)">
+                <image src="/static/icons/play.png" mode="aspectFit" class="play-icon"></image>
+              </view>
+              <radio :checked="currentEditingProfile.voiceType === voice.id" color="#2196f3" />
+            </view>
+          </view>
+        </view>
+      </view>
+    </uni-popup>
+
+    <!-- Model Selection Sheet -->
+    <uni-popup ref="modelSelectionPopup" type="bottom">
+      <view class="popup-content">
+        <view class="popup-header">
+          <text class="popup-title">选择语言模型</text>
+          <view class="popup-close" @click="closeModelSelectionPopup">
+            <text>×</text>
+          </view>
+        </view>
+        <view class="model-list">
+          <view 
+            class="model-item" 
+            v-for="model in languageModels" 
+            :key="model.id"
+            @click="selectLanguageModel(model)"
+          >
+            <view class="model-content">
+              <text class="model-name">{{ model.name }}</text>
+              <text class="model-desc">{{ model.description }}</text>
+            </view>
+            <radio :checked="currentEditingProfile.modelType === model.id" color="#2196f3" />
+          </view>
+        </view>
+      </view>
+    </uni-popup>
+
     <!-- Tutorial Tip -->
     <view class="tutorial-tip" v-if="showTutorial">
       <view class="tip-content">
         <image src="/static/icons/info.png" mode="aspectFit" class="info-icon"></image>
         <view class="tip-text">
-          <text class="tip-title">多个孩子可以使用不同档案</text>
-          <text class="tip-description">每个档案会根据孩子的年龄和兴趣推荐不同的内容</text>
+          <text class="tip-title">不同角色提供不同的交互体验</text>
+          <text class="tip-description">您可以根据需求切换不同的角色，体验多样化的交流方式</text>
         </view>
       </view>
       <view class="tip-close" @click="closeTutorial">
@@ -106,17 +193,25 @@ export default {
       activeProfileId: null,
       defaultAvatar: '/static/images/default-avatar.png',
       showTutorial: true,
-      interestTags: [
-        { id: 'math', name: '数学' },
-        { id: 'language', name: '语言' },
-        { id: 'science', name: '科学' },
-        { id: 'art', name: '艺术' },
-        { id: 'music', name: '音乐' },
-        { id: 'nature', name: '自然' },
-        { id: 'history', name: '历史' },
-        { id: 'sports', name: '体育' },
-        { id: 'reading', name: '阅读' },
-        { id: 'coding', name: '编程' }
+      currentEditingProfile: {},
+      roleTemplates: [
+        { id: 'taiwan_girl', name: '台湾女友', description: '温柔可爱的台湾女孩，说话甜美亲切' },
+        { id: 'tuber', name: '土豆子', description: '幽默风趣的搞笑角色，擅长说段子' },
+        { id: 'english_tutor', name: 'English Tutor', description: '专业英语教师，帮助提升英语水平' },
+        { id: 'curious_boy', name: '好奇小男孩', description: '充满好奇心的小男孩，喜欢问为什么' },
+        { id: 'team_leader', name: '汪汪队队长', description: '负责任的领导者，善于组织和鼓励' }
+      ],
+      voiceTypes: [
+        { id: 'taiwan_girl', name: '台湾小何', description: '柔和甜美的台湾女声', sample: '/static/audio/taiwan_girl.mp3' },
+        { id: 'mainland_girl', name: '大陆女声', description: '标准流利的普通话女声', sample: '/static/audio/mainland_girl.mp3' },
+        { id: 'boy_voice', name: '男孩声音', description: '活泼阳光的少年音', sample: '/static/audio/boy_voice.mp3' },
+        { id: 'robot', name: '机器人', description: '科技感十足的合成音', sample: '/static/audio/robot.mp3' }
+      ],
+      languageModels: [
+        { id: 'gpt4', name: 'GPT-4', description: '能力最强的通用模型，回答全面准确' },
+        { id: 'gpt3', name: 'GPT-3.5', description: '平衡速度和质量的通用模型' },
+        { id: 'claude', name: 'Claude', description: '擅长自然对话和角色扮演的模型' },
+        { id: 'deepseek', name: 'DeepSeek', description: '中文理解能力优秀的国产模型' }
       ]
     }
   },
@@ -139,26 +234,26 @@ export default {
     },
     loadProfiles() {
       // Load profiles from storage
-      const profiles = uni.getStorageSync('childProfiles') || [];
+      const profiles = uni.getStorageSync('roleProfiles') || [];
       this.profiles = profiles;
       
       // Get active profile
-      this.activeProfileId = uni.getStorageSync('activeProfileId');
+      this.activeProfileId = uni.getStorageSync('activeRoleProfileId');
       
       // If no active profile but profiles exist, set the first one as active
       if (!this.activeProfileId && profiles.length > 0) {
         this.activeProfileId = profiles[0].id;
-        uni.setStorageSync('activeProfileId', this.activeProfileId);
+        uni.setStorageSync('activeRoleProfileId', this.activeProfileId);
       }
     },
     navigateToAddProfile() {
       uni.navigateTo({
-        url: '/pages/settings/child-profile'
+        url: '/pages/settings/role-setting'
       });
     },
     editProfile(profile) {
       uni.navigateTo({
-        url: `/pages/settings/child-profile?id=${profile.id}`
+        url: `/pages/settings/role-setting?id=${profile.id}`
       });
     },
     switchProfile(profile) {
@@ -168,36 +263,71 @@ export default {
       
       setTimeout(() => {
         this.activeProfileId = profile.id;
-        uni.setStorageSync('activeProfileId', profile.id);
+        uni.setStorageSync('activeRoleProfileId', profile.id);
         
         uni.hideLoading();
         
         uni.showToast({
-          title: `已切换到「${profile.name}」的档案`,
+          title: `已切换到「${profile.roleName || profile.name}」`,
           icon: 'success'
         });
         
         this.loadProfiles(); // Reload to update UI
       }, 800); // Simulate a brief loading period
     },
-    getGenderText(gender) {
-      return gender === 'male' ? '男孩' : gender === 'female' ? '女孩' : '';
+    showRoleTemplatePopup() {
+      this.$refs.roleTemplatePopup.open();
     },
-    getInterestNames(interestIds) {
-      return interestIds.map(id => {
-        const tag = this.interestTags.find(t => t.id === id);
-        return tag ? tag.name : '';
-      }).filter(name => name !== '');
+    closeRoleTemplatePopup() {
+      this.$refs.roleTemplatePopup.close();
+    },
+    selectRoleTemplate(template) {
+      this.currentEditingProfile.roleTemplate = template.id;
+      this.closeRoleTemplatePopup();
+    },
+    showVoiceTypePopup() {
+      this.$refs.voiceTypePopup.open();
+    },
+    closeVoiceTypePopup() {
+      this.$refs.voiceTypePopup.close();
+    },
+    selectVoiceType(voice) {
+      this.currentEditingProfile.voiceType = voice.id;
+      this.closeVoiceTypePopup();
+    },
+    playVoiceSample(voice) {
+      if (!voice.sample) return;
+      
+      const innerAudioContext = uni.createInnerAudioContext();
+      innerAudioContext.autoplay = true;
+      innerAudioContext.src = voice.sample;
+      
+      innerAudioContext.onError((res) => {
+        uni.showToast({
+          title: '播放失败',
+          icon: 'none'
+        });
+      });
+    },
+    showModelSelectionPopup() {
+      this.$refs.modelSelectionPopup.open();
+    },
+    closeModelSelectionPopup() {
+      this.$refs.modelSelectionPopup.close();
+    },
+    selectLanguageModel(model) {
+      this.currentEditingProfile.modelType = model.id;
+      this.closeModelSelectionPopup();
     },
     closeTutorial() {
       this.showTutorial = false;
       // In a real app, you might want to save this preference
-      uni.setStorageSync('profileTutorialSeen', true);
+      uni.setStorageSync('roleProfileTutorialSeen', true);
     }
   },
   onLoad() {
     // Check if the tutorial has been seen before
-    const tutorialSeen = uni.getStorageSync('profileTutorialSeen');
+    const tutorialSeen = uni.getStorageSync('roleProfileTutorialSeen');
     if (tutorialSeen) {
       this.showTutorial = false;
     }
@@ -426,6 +556,85 @@ export default {
   color: white;
   font-size: 32rpx;
   border-radius: 45rpx;
+}
+
+.popup-content {
+  background-color: #fff;
+  border-radius: 20rpx 20rpx 0 0;
+  padding: 30rpx;
+  max-height: 70vh;
+}
+
+.popup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30rpx;
+}
+
+.popup-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.popup-close {
+  padding: 10rpx;
+}
+
+.popup-close text {
+  font-size: 40rpx;
+  color: #999;
+}
+
+.template-list, .voice-list, .model-list {
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.template-item, .voice-item, .model-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 30rpx 0;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.template-content, .voice-content, .model-content {
+  flex: 1;
+}
+
+.template-name, .voice-name, .model-name {
+  font-size: 30rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 10rpx;
+}
+
+.template-desc, .voice-desc, .model-desc {
+  font-size: 26rpx;
+  color: #666;
+}
+
+.voice-actions {
+  display: flex;
+  align-items: center;
+}
+
+.play-button {
+  width: 60rpx;
+  height: 60rpx;
+  border-radius: 30rpx;
+  background-color: #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 20rpx;
+}
+
+.play-icon {
+  width: 32rpx;
+  height: 32rpx;
 }
 
 .tutorial-tip {

@@ -118,6 +118,48 @@
 				"navigationBarTitleText": "注册",
 				"navigationStyle": "custom"
 			}
+		},
+		{
+			"path": "pages/settings/about",
+			"style": {
+				"navigationBarTitleText": "关于我们",
+				"navigationStyle": "custom"
+			}	
+		},
+		{
+			"path": "pages/settings/language-region",
+			"style": {
+				"navigationBarTitleText": "语言和地区",
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/settings/api-settings",
+			"style": {
+				"navigationBarTitleText": "API设置",
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/settings/model-settings",
+			"style": {
+				"navigationBarTitleText": "模型设置",
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/settings/device-management",
+			"style": {
+				"navigationBarTitleText": "设备管理",
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/settings/role-setting",
+			"style": {
+				"navigationBarTitleText": "角色设置",
+				"navigationStyle": "custom"
+			}
 		}
 	],
 	"globalStyle": {

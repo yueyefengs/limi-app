@@ -1,14 +1,5 @@
 <template>
 	<view class="profile-container">
-		<!-- iOS Status Bar -->
-		<view class="status-bar">
-			<view class="time">{{currentTime}}</view>
-			<view class="icons">
-				<text class="icon">📶</text>
-				<text class="icon">📡</text>
-				<text class="icon">🔋</text>
-			</view>
-		</view>
 		
 		<!-- Main Content Area -->
 		<view class="content">
@@ -47,60 +38,56 @@
 				</view>
 			</view>
 			
-			<!-- Character Settings -->
-			<view class="menu-section">
-				<view class="menu-header">角色设定</view>
-				<view class="menu-item" @click="handleNavigation('/pages/settings/child-profile')">
-					<view class="menu-icon">👤</view>
-					<view class="menu-text">自定义人设</view>
-					<view class="menu-arrow">></view>
-				</view>
-				<view class="menu-item" @click="handleNavigation('/pages/settings/child-profiles')">
-					<view class="menu-icon">🏷️</view>
-					<view class="menu-text">兴趣标签</view>
-					<view class="menu-arrow">></view>
-				</view>
-				<view class="menu-item" @click="handleNavigation('/pages/settings/parental-controls')">
-					<view class="menu-icon">🤖</view>
-					<view class="menu-text">AI设置</view>
-					<view class="menu-arrow">></view>
-				</view>
-			</view>
-			
 			<!-- Settings Menu -->
 			<view class="menu-section">
 				<view class="menu-header">设置</view>
-				<view class="menu-item" @click="handleNavigation('/pages/settings/index')">
+				<view class="menu-item" @click="handleNavigation('/pages/settings/child-profile')">
+					<view class="menu-icon">👤</view>
+					<view class="menu-text">个人信息</view>
+					<view class="menu-arrow">></view>
+				</view>
+				<view class="menu-item" @click="handleNavigation('/pages/settings/role-setting')">
+					<view class="menu-icon">🏷️</view>
+					<view class="menu-text">角色设定</view>
+					<view class="menu-arrow">></view>
+				</view>
+				<view class="menu-item" @click="handleNavigation('/pages/settings/device-management')">
 					<view class="menu-icon">📡</view>
 					<view class="menu-text">连接设置</view>
 					<view class="menu-arrow">></view>
 				</view>
+				<view class="menu-item" @click="handleNavigation('/pages/settings/api-settings')">
+					<view class="menu-icon">🔑</view>
+					<view class="menu-text">大模型API设置</view>
+					<view class="menu-arrow">></view>
+				</view>
+				<view class="menu-item" @click="handleNavigation('/pages/settings/parental-controls')">
+					<view class="menu-icon">🔒</view>
+					<view class="menu-text">家长控制</view>
+					<view class="menu-arrow">></view>
+				</view>
 			</view>
+		
 			
 			<!-- Support & About Menu -->
 			<view class="menu-section">
 				<view class="menu-header">支持与关于</view>
-				<view class="menu-item" @click="handleNavigation('/pages/settings/content-filter')">
+				<view class="menu-item" @click="handleNavigation('/pages/settings/language-region')">
 					<view class="menu-icon">🌐</view>
 					<view class="menu-text">语言和地区</view>
 					<view class="menu-arrow">></view>
 				</view>
-				<view class="menu-item" @click="handleNavigation('/pages/settings/parental-controls')">
-					<view class="menu-icon">🛡️</view>
-					<view class="menu-text">隐私与安全</view>
-					<view class="menu-arrow">></view>
-				</view>
-				<view class="menu-item" @click="handleNavigation('/pages/settings/usage-control')">
+				<view class="menu-item" @click="handleNavigation('/pages/settings/help-center')">
 					<view class="menu-icon">❓</view>
 					<view class="menu-text">帮助中心</view>
 					<view class="menu-arrow">></view>
 				</view>
-				<view class="menu-item" @click="handleNavigation('/pages/settings/content-filter')">
+				<view class="menu-item" @click="handleNavigation('/pages/settings/privacy-policy')">
 					<view class="menu-icon">🔒</view>
 					<view class="menu-text">隐私政策</view>
 					<view class="menu-arrow">></view>
 				</view>
-				<view class="menu-item" @click="showAboutInfo">
+				<view class="menu-item" @click="handleNavigation('/pages/settings/about')">
 					<view class="menu-icon">ℹ️</view>
 					<view class="menu-text">关于小智</view>
 					<view class="menu-arrow">></view>
@@ -145,7 +132,8 @@ export default {
 				age: 5,
 				gender: '男',
 				avatar: '/static/images/avatar.png',
-				interests: ['恐龙', '宇宙', '绘画'],
+				interests: ['画画', '积木', '恐龙'],
+				language: '中文',
 				parentContact: '138****1234',
 				dailyLimit: '2:30'
 			}
@@ -183,39 +171,11 @@ export default {
 				fail: (err) => {
 					console.error('Navigation failed:', err);
 					
-					// Extract the page name from the URL
-					const pageName = url.split('/').pop();
-					
-					// Try alternative paths for specific pages
-					if (url.includes('child-profile')) {
-						// For child profile specifically
-						uni.navigateTo({
-							url: '/pages/settings/child-profile',
-							fail: () => {
-								uni.showToast({
-									title: '页面开发中，即将上线',
-									icon: 'none'
-								});
-							}
-						});
-					} else if (url.includes('child-profiles')) {
-						// For child profiles list
-						uni.navigateTo({
-							url: '/pages/settings/child-profiles',
-							fail: () => {
-								uni.showToast({
-									title: '页面开发中，即将上线',
-									icon: 'none'
-								});
-							}
-						});
-					} else {
-						// For other pages
-						uni.showToast({
-							title: '页面开发中，即将上线',
-							icon: 'none'
-						});
-					}
+					// Try alternative paths or show toast
+					uni.showToast({
+						title: '页面开发中，即将上线',
+						icon: 'none'
+					});
 				}
 			});
 		},
@@ -227,10 +187,32 @@ export default {
 		showAboutInfo() {
 			uni.showModal({
 				title: '关于小智',
-				content: '小智AI伴学应用是一款专为3-12岁儿童设计的人工智能学习助手，由小智智能科技有限公司开发。\n\n版本: v1.0.3\n构建号: 2025042201',
+				content: '小智AI伴学应用是一款专为3-12岁儿童设计的人工智能学习助手，由小智智能科技有限公司开发。\n\n版本: v1.0.3\n构建号: 2025042201\n使用条款：请访问我们的官网查看详细使用条款',
 				showCancel: false,
-				confirmText: '确定'
+				confirmText: '确定',
+				success: (res) => {
+					if (res.confirm) {
+						// Check for updates
+						this.checkForUpdates();
+					}
+				}
 			});
+		},
+		checkForUpdates() {
+			uni.showLoading({
+				title: '检查更新中...'
+			});
+			
+			// 模拟检查更新
+			setTimeout(() => {
+				uni.hideLoading();
+				uni.showModal({
+					title: '检查结果',
+					content: '您当前使用的已是最新版本',
+					showCancel: false,
+					confirmText: '确定'
+				});
+			}, 1500);
 		},
 		logout() {
 			uni.showModal({
