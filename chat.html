@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小智App - 智能聊天</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .chat-container {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .chat-header {
+            display: flex;
+            align-items: center;
+            padding: 10px 15px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 10px;
+        }
+        
+        .chat-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0;
+            flex: 1;
+            text-align: center;
+        }
+        
+        .robot-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 10px;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px 15px;
+        }
+        
+        .message {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: flex-start;
+        }
+        
+        .message.user {
+            flex-direction: row-reverse;
+        }
+        
+        .message-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            margin: 0 10px;
+        }
+        
+        .message-bubble {
+            max-width: 70%;
+            padding: 12px 15px;
+            border-radius: 18px;
+            font-size: 14px;
+            position: relative;
+        }
+        
+        .message.bot .message-bubble {
+            background-color: #f0f2f5;
+            color: var(--text-color);
+            border-bottom-left-radius: 5px;
+        }
+        
+        .message.user .message-bubble {
+            background-color: var(--primary-color);
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+        
+        .message-time {
+            font-size: 11px;
+            color: var(--light-text);
+            margin-top: 5px;
+            text-align: center;
+        }
+        
+        .chat-input-container {
+            padding: 10px 15px;
+            border-top: 1px solid var(--border-color);
+            background-color: white;
+            display: flex;
+            align-items: center;
+        }
+        
+        .chat-input {
+            flex: 1;
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 10px 15px;
+            font-size: 14px;
+            background-color: #f5f5f5;
+        }
+        
+        .chat-send {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 10px;
+            cursor: pointer;
+        }
+        
+        .chat-actions {
+            display: flex;
+            margin-right: 10px;
+        }
+        
+        .chat-action-button {
+            width: 38px;
+            height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: var(--light-text);
+            cursor: pointer;
+        }
+        
+        .voice-button {
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+        
+        .typing-indicator {
+            display: flex;
+            padding: 6px 10px;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--light-text);
+            border-radius: 50%;
+            margin: 0 2px;
+            animation: typing-animation 1.5s infinite ease-in-out;
+        }
+        
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        
+        @keyframes typing-animation {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+            100% { transform: translateY(0); }
+        }
+        
+        .message-audio {
+            display: flex;
+            align-items: center;
+            min-width: 100px;
+        }
+        
+        .audio-wave {
+            flex: 1;
+            height: 20px;
+            background: linear-gradient(to bottom, #ddd 50%, transparent 50%);
+            background-size: 4px 4px;
+            margin: 0 5px;
+        }
+        
+        .audio-duration {
+            font-size: 12px;
+            color: var(--light-text);
+        }
+        
+        .message.user .audio-duration {
+            color: rgba(255,255,255,0.8);
+        }
+        
+        .message-image {
+            max-width: 200px;
+            max-height: 200px;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        .message-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .action-chips {
+            display: flex;
+            flex-wrap: wrap;
+            margin-top: 10px;
+            gap: 10px;
+        }
+        
+        .action-chip {
+            padding: 8px 12px;
+            background-color: #edf1f5;
+            border-radius: 15px;
+            font-size: 13px;
+            color: var(--primary-color);
+            cursor: pointer;
+        }
+        
+        .navbar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0 30px;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+            z-index: 100;
+        }
+        
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--light-text);
+            text-decoration: none;
+            font-size: 10px;
+        }
+        
+        .nav-item i {
+            font-size: 22px;
+            margin-bottom: 4px;
+        }
+        
+        .nav-item.active {
+            color: var(--primary-color);
+        }
+    </style>
+</head>
+<body>
+    <!-- iOS Status Bar -->
+    <div class="status-bar">
+        <div class="time">9:41</div>
+        <div class="icons">
+            <i class="fas fa-signal"></i>
+            <i class="fas fa-wifi"></i>
+            <i class="fas fa-battery-full"></i>
+        </div>
+    </div>
+    
+    <!-- Main Content Area -->
+    <div class="content" style="padding: 0;">
+        <div class="chat-container">
+            <div class="chat-header">
+                <div class="robot-avatar" style="background-color: #f0f2f5; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-robot" style="color: var(--primary-color);"></i>
+                </div>
+                <h2 class="chat-title">小智助手</h2>
+                <div class="chat-actions">
+                    <a href="chat-history.html" class="chat-action-button">
+                        <i class="fas fa-history"></i>
+                    </a>
+                    <a href="content-recommendations.html" class="chat-action-button">
+                        <i class="fas fa-magic"></i>
+                    </a>
+                </div>
+            </div>
+            
+            <div class="chat-messages">
+                <!-- Bot Message -->
+                <div class="message bot">
+                    <div class="message-avatar" style="background-color: #f0f2f5; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-robot" style="color: var(--primary-color);"></i>
+                    </div>
+                    <div>
+                        <div class="message-bubble">
+                            你好！我是小智，今天想学些什么呢？我可以给你讲故事、唱儿歌、玩益智游戏，或者回答简单的问题！
+                        </div>
+                        <div class="action-chips">
+                            <div class="action-chip">讲个恐龙故事</div>
+                            <div class="action-chip">来首儿歌</div>
+                            <div class="action-chip">猜谜语</div>
+                            <div class="action-chip">学习动物知识</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Time Indicator -->
+                <div class="message-time">今天 09:32</div>
+                
+                <!-- User Message -->
+                <div class="message user">
+                    <div class="message-avatar">
+                        <img src="https://randomuser.me/api/portraits/children/1.jpg" alt="用户头像">
+                    </div>
+                    <div class="message-bubble">
+                        小智，我想听一个恐龙的故事！
+                    </div>
+                </div>
+                
+                <!-- Bot Message with Audio -->
+                <div class="message bot">
+                    <div class="message-avatar" style="background-color: #f0f2f5; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-robot" style="color: var(--primary-color);"></i>
+                    </div>
+                    <div>
+                        <div class="message-bubble">
+                            好的！这是《小雷龙的大冒险》故事：
+                            <div class="message-audio">
+                                <i class="fas fa-play" style="color: var(--primary-color);"></i>
+                                <div class="audio-wave"></div>
+                                <div class="audio-duration">2:35</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Bot Message with Image -->
+                <div class="message bot">
+                    <div class="message-avatar" style="background-color: #f0f2f5; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-robot" style="color: var(--primary-color);"></i>
+                    </div>
+                    <div>
+                        <div class="message-bubble">
+                            这是故事中的小雷龙：
+                            <div class="message-image">
+                                <img src="https://images.unsplash.com/photo-1560148271-00b5e5850812?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60" alt="恐龙图片">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- User Message - Audio -->
+                <div class="message user">
+                    <div class="message-avatar">
+                        <img src="https://randomuser.me/api/portraits/children/1.jpg" alt="用户头像">
+                    </div>
+                    <div class="message-bubble">
+                        <div class="message-audio">
+                            <i class="fas fa-play" style="color: white;"></i>
+                            <div class="audio-wave"></div>
+                            <div class="audio-duration">0:48</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Typing Indicator -->
+                <div class="typing-indicator">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
+            </div>
+            
+            <div class="chat-input-container">
+                <div class="chat-action-button">
+                    <i class="fas fa-plus"></i>
+                </div>
+                <input type="text" class="chat-input" placeholder="输入消息...">
+                <div class="chat-action-button">
+                    <div class="voice-button">
+                        <i class="fas fa-microphone"></i>
+                    </div>
+                </div>
+                <div class="chat-send">
+                    <i class="fas fa-paper-plane"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bottom Navigation Bar -->
+    <div class="navbar">
+        <a href="home.html" class="nav-item">
+            <i class="fas fa-home"></i>
+            <span>首页</span>
+        </a>
+        <a href="chat.html" class="nav-item active">
+            <i class="fas fa-comment"></i>
+            <span>聊天</span>
+        </a>
+        <a href="content-recommendations.html" class="nav-item">
+            <i class="fas fa-compass"></i>
+            <span>发现</span>
+        </a>
+        <a href="profile.html" class="nav-item">
+            <i class="fas fa-user"></i>
+            <span>我的</span>
+        </a>
+    </div>
+</body>
+</html> 

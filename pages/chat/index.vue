@@ -1,123 +1,155 @@
 <template>
 	<view class="chat-container">
-		<!-- Header -->
-		<view class="header">
-			<view class="avatar-container">
-				<image class="ai-avatar" src="/static/images/ai-avatar.png" mode="aspectFill"></image>
-				<view class="ai-status">在线</view>
-			</view>
-			<view class="ai-info">
-				<text class="ai-name">小智AI</text>
-				<text class="ai-description">你的AI学习伙伴</text>
+		<!-- 状态栏 -->
+		<view class="status-bar">
+			<text class="time">9:41</text>
+			<view class="icons">
+				<text class="fa fa-signal"></text>
+				<text class="fa fa-wifi"></text>
+				<text class="fa fa-battery-full"></text>
 			</view>
 		</view>
 		
-		<!-- Chat Messages -->
-		<scroll-view class="messages-container" scroll-y="true" :scroll-top="scrollTop" @scrolltolower="loadMoreMessages" ref="messagesScroll">
+		<!-- 聊天头部 -->
+		<view class="chat-header">
+			<view class="robot-avatar">
+				<text class="fa fa-robot"></text>
+			</view>
+			<text class="chat-title">小智助手</text>
+			<view class="chat-actions">
+				<view class="chat-action-button" @click="navigateTo('/pages/chat/history')">
+					<text class="fa fa-history"></text>
+				</view>
+				<view class="chat-action-button">
+					<text class="fa fa-magic"></text>
+				</view>
+			</view>
+		</view>
+		
+		<!-- 聊天消息 -->
+		<scroll-view class="chat-messages" scroll-y="true" :scroll-top="scrollTop" @scrolltolower="loadMoreMessages" ref="messagesScroll">
 			<view class="date-divider" v-if="messages.length > 0">{{todayDate}}</view>
 			
-			<view v-for="(message, index) in messages" :key="index" class="message-wrapper" :class="message.type">
-				<view class="message" :class="message.type">
-					<view class="message-avatar" v-if="message.type === 'received'">
-						<image src="/static/images/ai-avatar.png" mode="aspectFill"></image>
-					</view>
-					<view class="message-content">
+			<view v-for="(message, index) in messages" :key="index" class="message" :class="message.type === 'received' ? 'bot' : 'user'">
+				<view class="message-avatar" v-if="message.type === 'received'">
+					<text class="fa fa-robot"></text>
+				</view>
+				<view v-if="message.type === 'received'">
+					<view class="message-bubble">
 						<text v-if="message.text" class="message-text">{{message.text}}</text>
 						<view v-if="message.isImage" class="message-image">
-							<image :src="message.url" mode="widthFix" @tap="previewImage(message.url)"></image>
+							<image :src="message.url" mode="aspectFill" @tap="previewImage(message.url)"></image>
 						</view>
 						<view v-if="message.isAudio" class="message-audio" @tap="playAudio(message.url)">
+							<text class="fa fa-play"></text>
+							<view class="audio-wave"></view>
 							<text class="audio-duration">{{message.duration}}″</text>
-							<view class="audio-waves">
-								<view class="wave" v-for="n in 4" :key="n"></view>
-							</view>
-							<text class="audio-status">{{isPlaying && currentAudio === message.url ? '播放中' : '点击播放'}}</text>
 						</view>
 					</view>
-					<view class="message-avatar" v-if="message.type === 'sent'">
-						<image :src="currentChild.avatar" mode="aspectFill"></image>
+					<view class="action-chips" v-if="index === messages.length - 1 && message.type === 'received'">
+						<view 
+							v-for="(chip, chipIndex) in suggestionChips" 
+							:key="chipIndex" 
+							class="action-chip" 
+							@tap="sendMessage(chip)">
+							{{chip}}
+						</view>
 					</view>
-					<view class="message-time">{{message.time}}</view>
+				</view>
+				<view v-else>
+					<view class="message-bubble">
+						<text v-if="message.text" class="message-text">{{message.text}}</text>
+						<view v-if="message.isImage" class="message-image">
+							<image :src="message.url" mode="aspectFill" @tap="previewImage(message.url)"></image>
+						</view>
+						<view v-if="message.isAudio" class="message-audio" @tap="playAudio(message.url)">
+							<text class="fa fa-play"></text>
+							<view class="audio-wave"></view>
+							<text class="audio-duration">{{message.duration}}″</text>
+						</view>
+					</view>
+				</view>
+				<view class="message-avatar" v-if="message.type === 'sent'">
+					<image :src="currentChild.avatar" mode="aspectFill"></image>
 				</view>
 			</view>
 			
-			<!-- Typing indicator -->
-			<view class="message-wrapper received" v-if="isTyping">
-				<view class="message received">
-					<view class="message-avatar">
-						<image src="/static/images/ai-avatar.png" mode="aspectFill"></image>
-					</view>
-					<view class="message-content typing-indicator">
-						<view class="dot"></view>
-						<view class="dot"></view>
-						<view class="dot"></view>
-					</view>
-				</view>
+			<!-- 时间指示器 -->
+			<view class="message-time">{{currentTime}}</view>
+			
+			<!-- 输入指示器 -->
+			<view class="typing-indicator" v-if="isTyping">
+				<view class="typing-dot"></view>
+				<view class="typing-dot"></view>
+				<view class="typing-dot"></view>
 			</view>
 		</scroll-view>
 		
-		<!-- Suggestion Chips -->
-		<scroll-view class="suggestion-chips" scroll-x="true" v-if="suggestionChips.length > 0">
-			<view 
-				v-for="(chip, index) in suggestionChips" 
-				:key="index" 
-				class="chip" 
-				@tap="sendMessage(chip)">
-				{{chip}}
+		<!-- 输入区域 -->
+		<view class="chat-input-container">
+			<view class="chat-action-button" @tap="showMediaOptions">
+				<text class="fa fa-plus"></text>
 			</view>
-		</scroll-view>
-		
-		<!-- Input Area -->
-		<view class="input-container">
-			<view class="input-buttons">
-				<view class="input-button" @tap="toggleVoiceInput">
-					<view class="icon" :class="{'active': isVoiceInputActive}">
-						<view class="mic-icon"></view>
-					</view>
+			
+			<input 
+				type="text" 
+				class="chat-input" 
+				v-model="inputMessage" 
+				placeholder="输入消息..." 
+				confirm-type="send"
+				@confirm="sendTextMessage"
+			/>
+			
+			<view class="chat-action-button" @tap="toggleVoiceInput">
+				<view class="voice-button">
+					<text class="fa fa-microphone"></text>
 				</view>
 			</view>
 			
-			<view class="text-input" v-if="!isVoiceInputActive">
-				<input 
-					type="text" 
-					v-model="inputMessage" 
-					placeholder="输入消息..." 
-					confirm-type="send"
-					@confirm="sendTextMessage"
-				/>
-			</view>
-			
-			<view class="voice-input" v-else @touchstart="startRecording" @touchend="stopRecording">
-				<text>按住说话</text>
-			</view>
-			
-			<view class="input-buttons">
-				<view class="input-button" v-if="inputMessage.trim().length > 0" @tap="sendTextMessage">
-					<view class="icon send-icon">
-						<view class="send-arrow"></view>
-					</view>
-				</view>
-				<view class="input-button" v-else @tap="showMediaOptions">
-					<view class="icon">
-						<view class="plus-icon"></view>
-					</view>
-				</view>
+			<view class="chat-send" v-if="inputMessage.trim().length > 0" @tap="sendTextMessage">
+				<text class="fa fa-paper-plane"></text>
 			</view>
 		</view>
 		
-		<!-- Media Options Popup -->
+		<!-- 媒体选项 -->
 		<view class="media-options" v-if="showMedia">
 			<view class="media-option" @tap="chooseImage">
-				<view class="media-icon image-icon"></view>
+				<view class="media-icon image-icon">
+					<text class="fa fa-image"></text>
+				</view>
 				<text>图片</text>
 			</view>
 			<view class="media-option" @tap="takePhoto">
-				<view class="media-icon camera-icon"></view>
+				<view class="media-icon camera-icon">
+					<text class="fa fa-camera"></text>
+				</view>
 				<text>拍照</text>
 			</view>
 			<view class="media-option" @tap="hideMediaOptions">
-				<view class="media-icon close-icon"></view>
+				<view class="media-icon close-icon">
+					<text class="fa fa-times"></text>
+				</view>
 				<text>取消</text>
+			</view>
+		</view>
+		
+		<!-- 底部导航栏 -->
+		<view class="navbar">
+			<view class="nav-item" @click="navigateTo('/pages/home/index')">
+				<text class="fa fa-home"></text>
+				<text>首页</text>
+			</view>
+			<view class="nav-item active">
+				<text class="fa fa-comment"></text>
+				<text>聊天</text>
+			</view>
+			<view class="nav-item" @click="navigateTo('/pages/content/index')">
+				<text class="fa fa-compass"></text>
+				<text>发现</text>
+			</view>
+			<view class="nav-item" @click="navigateTo('/pages/profile/index')">
+				<text class="fa fa-user"></text>
+				<text>我的</text>
 			</view>
 		</view>
 	</view>
@@ -141,11 +173,12 @@ export default {
 			showMedia: false,
 			isPlaying: false,
 			currentAudio: '',
+			currentTime: '09:41',
 			suggestionChips: [
-				'讲个故事吧',
-				'我想学算数',
-				'解释一下光合作用',
-				'为什么天空是蓝色的？'
+				'讲个恐龙故事',
+				'来首儿歌',
+				'猜谜语',
+				'学习动物知识'
 			]
 		};
 	},
@@ -157,14 +190,27 @@ export default {
 	},
 	onLoad() {
 		this.loadInitialMessages();
+		this.updateCurrentTime();
+		setInterval(this.updateCurrentTime, 60000);
 	},
 	methods: {
+		updateCurrentTime() {
+			const now = new Date();
+			const hours = now.getHours().toString().padStart(2, '0');
+			const minutes = now.getMinutes().toString().padStart(2, '0');
+			this.currentTime = `今天 ${hours}:${minutes}`;
+		},
+		navigateTo(url) {
+			uni.switchTab({
+				url: url
+			});
+		},
 		loadInitialMessages() {
-			// Mock initial messages
+			// 模拟初始消息
 			const initialMessages = [
 				{
 					type: 'received',
-					text: '你好！我是小智AI，很高兴见到你！我可以陪你学习、回答问题、讲故事，你想聊些什么呢？',
+					text: '你好！我是小智，今天想学些什么呢？我可以给你讲故事、唱儿歌、玩益智游戏，或者回答简单的问题！',
 					time: this.formatTime(new Date(Date.now() - 1000 * 60 * 5))
 				}
 			];
@@ -173,7 +219,7 @@ export default {
 		},
 		
 		loadMoreMessages() {
-			// In a real app, this would load older messages from storage/API
+			// 加载更多消息
 			console.log('Loading more messages...');
 		},
 		
@@ -192,11 +238,11 @@ export default {
 			const userMessage = this.inputMessage;
 			this.inputMessage = '';
 			
-			// Show typing indicator
+			// 显示输入指示器
 			this.isTyping = true;
 			this.scrollToBottom();
 			
-			// Simulate AI response after a delay
+			// 模拟AI响应
 			setTimeout(() => {
 				this.receiveMessage(this.generateResponse(userMessage));
 			}, 1500);
@@ -219,19 +265,24 @@ export default {
 			this.messages.push(newMessage);
 			this.scrollToBottom();
 			
-			// Generate new suggestions based on context
+			// 根据上下文生成新的建议
 			this.updateSuggestions();
 		},
 		
 		toggleVoiceInput() {
 			this.isVoiceInputActive = !this.isVoiceInputActive;
 			if (this.showMedia) this.showMedia = false;
+			
+			if (this.isVoiceInputActive) {
+				this.startRecording();
+			} else {
+				this.stopRecording();
+			}
 		},
 		
 		startRecording() {
 			this.isRecording = true;
 			console.log('Recording started...');
-			// In a real app, this would start the recording process
 			uni.showToast({
 				title: '录音中...',
 				icon: 'none',
@@ -246,25 +297,24 @@ export default {
 			console.log('Recording stopped');
 			uni.hideToast();
 			
-			// Simulate processing voice and getting text
+			// 模拟语音消息
 			setTimeout(() => {
-				// Simulate voice message
 				const audioMessage = {
 					type: 'sent',
 					isAudio: true,
 					url: '/static/audio/voice-message.mp3',
-					duration: '3',
+					duration: '0:48',
 					time: this.formatTime(new Date())
 				};
 				
 				this.messages.push(audioMessage);
 				this.scrollToBottom();
 				
-				// Show typing indicator
+				// 显示输入指示器
 				this.isTyping = true;
 				this.scrollToBottom();
 				
-				// Simulate AI response after a delay
+				// 模拟AI响应
 				setTimeout(() => {
 					this.receiveMessage(this.generateResponse('语音消息内容'));
 				}, 1500);
@@ -311,31 +361,31 @@ export default {
 			this.messages.push(imageMessage);
 			this.scrollToBottom();
 			
-			// Show typing indicator
+			// 显示输入指示器
 			this.isTyping = true;
 			this.scrollToBottom();
 			
-			// Simulate AI response after a delay
+			// 模拟AI响应
 			setTimeout(() => {
 				this.receiveMessage({
-					text: '我看到了你发送的图片！这张图片很有趣。你想让我解释一下图片中的内容吗？'
+					text: '我看到了你发送的图片！这张图片很有趣。你想让我解释一下图片中的内容吗？',
+					isImage: true,
+					url: imageUrl
 				});
 			}, 2000);
 		},
 		
 		playAudio(url) {
 			if (this.isPlaying && this.currentAudio === url) {
-				// Stop playing
+				// 停止播放
 				this.isPlaying = false;
 				this.currentAudio = '';
-				// In a real app, this would stop the audio
 			} else {
-				// Start playing
+				// 开始播放
 				this.isPlaying = true;
 				this.currentAudio = url;
-				// In a real app, this would play the audio
 				
-				// Simulate audio finishing
+				// 模拟音频结束
 				setTimeout(() => {
 					this.isPlaying = false;
 					this.currentAudio = '';
@@ -350,13 +400,12 @@ export default {
 		},
 		
 		scrollToBottom() {
-			// Use nextTick to ensure DOM is updated
 			this.$nextTick(() => {
 				const query = uni.createSelectorQuery().in(this);
-				query.select('.messages-container').boundingClientRect();
+				query.select('.chat-messages').boundingClientRect();
 				query.exec((res) => {
 					if (res && res[0]) {
-						this.scrollTop = res[0].height * 2; // Multiply by 2 to ensure it scrolls to bottom
+						this.scrollTop = res[0].height * 2;
 					}
 				});
 			});
@@ -369,46 +418,55 @@ export default {
 		},
 		
 		generateResponse(userMessage) {
-			// Simple response logic - in a real app this would call an AI API
+			// 简单的响应逻辑
 			const lowerMessage = userMessage.toLowerCase();
 			
-			if (lowerMessage.includes('故事')) {
+			if (lowerMessage.includes('恐龙') || lowerMessage.includes('故事')) {
 				return {
-					text: '从前有一只小兔子，它住在森林里的一个小洞穴里。每天早晨，它都会出去寻找食物。有一天，它发现了一片胡萝卜地...'
+					text: '好的！这是《小雷龙的大冒险》故事：从前，有一只名叫小雷龙的恐龙，他住在茂密的丛林里...',
+					isAudio: true,
+					url: '/static/audio/story.mp3',
+					duration: '2:35'
 				};
-			} else if (lowerMessage.includes('算数') || lowerMessage.includes('数学')) {
+			} else if (lowerMessage.includes('儿歌') || lowerMessage.includes('唱歌')) {
 				return {
-					text: '算数很有趣！我们来学习一些基础的加法吧。1+1=2, 2+2=4, 3+3=6。你想学习哪种算数题目呢？'
+					text: '好的，我来唱一首《小星星》儿歌：一闪一闪亮晶晶，满天都是小星星...',
+					isAudio: true,
+					url: '/static/audio/song.mp3',
+					duration: '1:45'
 				};
-			} else if (lowerMessage.includes('光合作用')) {
+			} else if (lowerMessage.includes('谜语') || lowerMessage.includes('猜')) {
 				return {
-					text: '光合作用是植物利用阳光把二氧化碳和水转化为氧气和葡萄糖的过程。这就像植物的"做饭"过程，阳光是能源，二氧化碳和水是原料，而氧气是"烹饪"过程中释放的气体，葡萄糖则是植物的"食物"。'
+					text: '我来出一个谜语：什么东西有头无脚？猜猜看！'
 				};
-			} else if (lowerMessage.includes('天空') && lowerMessage.includes('蓝色')) {
+			} else if (lowerMessage.includes('动物') || lowerMessage.includes('知识')) {
 				return {
-					text: '天空看起来是蓝色的，是因为阳光中的蓝色光被空气中的小颗粒散射得最多。这些蓝色的光线从各个方向进入我们的眼睛，让我们看到的天空是蓝色的。这就像用一个蓝色的灯照亮一个房间一样！'
+					text: '你知道吗？大象是陆地上最大的动物，它们可以活到70岁，而且非常聪明！想了解哪种动物的知识呢？',
+					isImage: true,
+					url: '/static/images/elephant.jpg'
 				};
 			} else {
 				return {
-					text: '谢谢你的消息！你想了解什么其他有趣的知识呢？我可以帮你回答问题、讲故事，或者陪你玩一些有趣的学习游戏。'
+					text: '谢谢你的消息！你想了解什么有趣的知识呢？我可以给你讲故事、唱儿歌、玩益智游戏，或者回答简单的问题！'
 				};
 			}
 		},
 		
 		updateSuggestions() {
-			// Update suggestion chips based on conversation context
-			// In a real app, this would be more sophisticated
+			// 根据对话上下文更新建议
 			const lastMessage = this.messages[this.messages.length - 1];
 			
 			if (lastMessage && lastMessage.type === 'received') {
-				if (lastMessage.text.includes('故事')) {
-					this.suggestionChips = ['再讲一个故事', '这个故事有什么寓意？', '我想听冒险故事', '换个话题吧'];
-				} else if (lastMessage.text.includes('算数') || lastMessage.text.includes('数学')) {
-					this.suggestionChips = ['练习加法', '学习乘法', '数学游戏', '换个话题吧'];
-				} else if (lastMessage.text.includes('光合作用')) {
-					this.suggestionChips = ['植物怎么生长？', '动物呼吸是什么？', '为什么植物是绿色的？', '换个话题吧'];
+				if (lastMessage.text.includes('恐龙') || lastMessage.text.includes('故事')) {
+					this.suggestionChips = ['再讲一个故事', '讲讲霸王龙', '我想听冒险故事', '换个话题'];
+				} else if (lastMessage.text.includes('儿歌') || lastMessage.text.includes('唱')) {
+					this.suggestionChips = ['再唱一首', '我要听《两只老虎》', '学唱歌', '换个话题'];
+				} else if (lastMessage.text.includes('谜语') || lastMessage.text.includes('猜')) {
+					this.suggestionChips = ['再出一个谜语', '简单一点的', '我猜是枕头', '换个话题'];
+				} else if (lastMessage.text.includes('动物')) {
+					this.suggestionChips = ['讲讲长颈鹿', '海洋动物', '恐龙是什么动物', '换个话题'];
 				} else {
-					this.suggestionChips = ['讲个故事吧', '我想学算数', '解释一下光合作用', '为什么天空是蓝色的？'];
+					this.suggestionChips = ['讲个恐龙故事', '来首儿歌', '猜谜语', '学习动物知识'];
 				}
 			}
 		}
@@ -421,96 +479,114 @@ export default {
 	display: flex;
 	flex-direction: column;
 	height: 100vh;
-	background-color: #F5F6F8;
+	background-color: #f5f5f5;
 }
 
-.header {
+/* 状态栏样式 */
+.status-bar {
+	display: flex;
+	justify-content: space-between;
+	padding: 20rpx 30rpx;
+	background-color: #fff;
+}
+
+.time {
+	font-size: 32rpx;
+	font-weight: 500;
+}
+
+.icons {
+	display: flex;
+	gap: 20rpx;
+}
+
+/* 聊天头部样式 */
+.chat-header {
 	display: flex;
 	align-items: center;
-	padding: 15px;
-	background-color: #FFFFFF;
-	border-bottom: 1px solid #EAEAEA;
+	padding: 20rpx 30rpx;
+	border-bottom: 1rpx solid #eee;
+	background-color: #fff;
 }
 
-.avatar-container {
-	position: relative;
-	margin-right: 12px;
-}
-
-.ai-avatar {
-	width: 50px;
-	height: 50px;
-	border-radius: 25px;
-	background-color: #E1F5FE;
-}
-
-.ai-status {
-	position: absolute;
-	bottom: 0;
-	right: 0;
-	background-color: #4CAF50;
-	color: white;
-	font-size: 10px;
-	padding: 2px 5px;
-	border-radius: 10px;
-}
-
-.ai-info {
+.robot-avatar {
+	width: 80rpx;
+	height: 80rpx;
+	border-radius: 50%;
+	background-color: #f5f5f5;
 	display: flex;
-	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	margin-right: 20rpx;
 }
 
-.ai-name {
-	font-size: 18px;
-	font-weight: bold;
-	color: #333333;
+.robot-avatar .fa {
+	color: #2196f3;
+	font-size: 40rpx;
 }
 
-.ai-description {
-	font-size: 12px;
-	color: #999999;
-}
-
-.messages-container {
+.chat-title {
 	flex: 1;
-	padding: 15px;
+	font-size: 36rpx;
+	font-weight: 600;
+	color: #333;
+	text-align: center;
+}
+
+.chat-actions {
+	display: flex;
+}
+
+.chat-action-button {
+	width: 76rpx;
+	height: 76rpx;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 36rpx;
+	color: #666;
+}
+
+/* 聊天消息样式 */
+.chat-messages {
+	flex: 1;
+	padding: 20rpx 30rpx;
 	overflow-y: auto;
 }
 
 .date-divider {
 	text-align: center;
-	font-size: 12px;
-	color: #999999;
-	margin: 10px 0;
-	padding: 5px;
-}
-
-.message-wrapper {
-	margin-bottom: 15px;
-	display: flex;
-	flex-direction: column;
-}
-
-.message-wrapper.sent {
-	align-items: flex-end;
-}
-
-.message-wrapper.received {
-	align-items: flex-start;
+	font-size: 24rpx;
+	color: #999;
+	margin: 20rpx 0;
+	padding: 10rpx;
 }
 
 .message {
-	max-width: 70%;
+	margin-bottom: 30rpx;
 	display: flex;
-	flex-direction: row;
-	position: relative;
+	align-items: flex-start;
+}
+
+.message.user {
+	flex-direction: row-reverse;
 }
 
 .message-avatar {
-	width: 36px;
-	height: 36px;
-	border-radius: 18px;
+	width: 72rpx;
+	height: 72rpx;
+	border-radius: 50%;
+	margin: 0 20rpx;
 	overflow: hidden;
+	background-color: #f5f5f5;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.message-avatar .fa {
+	color: #2196f3;
+	font-size: 36rpx;
 }
 
 .message-avatar image {
@@ -518,272 +594,191 @@ export default {
 	height: 100%;
 }
 
-.message-content {
-	margin: 0 10px;
-	padding: 10px 15px;
-	border-radius: 18px;
+.message-bubble {
+	max-width: 70%;
+	padding: 24rpx 30rpx;
+	border-radius: 36rpx;
+	font-size: 28rpx;
 	position: relative;
 }
 
-.message.sent .message-content {
-	background-color: #DCF8C6;
-	margin-right: 10px;
+.message.bot .message-bubble {
+	background-color: #f0f2f5;
+	color: #333;
+	border-bottom-left-radius: 10rpx;
 }
 
-.message.received .message-content {
-	background-color: #FFFFFF;
-	margin-left: 10px;
-}
-
-.message-text {
-	font-size: 16px;
-	line-height: 1.4;
-	color: #333333;
+.message.user .message-bubble {
+	background-color: #2196f3;
+	color: white;
+	border-bottom-right-radius: 10rpx;
 }
 
 .message-time {
-	font-size: 10px;
-	color: #999999;
-	margin-top: 5px;
-	align-self: flex-end;
+	font-size: 22rpx;
+	color: #999;
+	margin: 10rpx 0;
+	text-align: center;
 }
 
 .message-image {
-	width: 200px;
-	border-radius: 12px;
+	max-width: 400rpx;
+	max-height: 400rpx;
+	border-radius: 24rpx;
 	overflow: hidden;
+	margin-top: 10rpx;
 }
 
 .message-image image {
 	width: 100%;
-	height: auto;
+	height: 100%;
+	object-fit: cover;
 }
 
 .message-audio {
 	display: flex;
 	align-items: center;
-	min-width: 120px;
-	cursor: pointer;
+	min-width: 200rpx;
+	margin-top: 10rpx;
+}
+
+.message-audio .fa {
+	margin-right: 10rpx;
+}
+
+.audio-wave {
+	flex: 1;
+	height: 40rpx;
+	background: linear-gradient(to bottom, #ddd 50%, transparent 50%);
+	background-size: 8rpx 8rpx;
+	margin: 0 10rpx;
+}
+
+.message.user .audio-wave {
+	background: linear-gradient(to bottom, rgba(255,255,255,0.6) 50%, transparent 50%);
+	background-size: 8rpx 8rpx;
 }
 
 .audio-duration {
-	font-size: 14px;
-	margin-right: 10px;
-}
-
-.audio-waves {
-	display: flex;
-	align-items: center;
-}
-
-.wave {
-	width: 3px;
-	height: 10px;
-	background-color: #666;
-	margin: 0 2px;
-	border-radius: 5px;
-}
-
-.wave:nth-child(2) {
-	height: 15px;
-}
-
-.wave:nth-child(3) {
-	height: 8px;
-}
-
-.audio-status {
-	font-size: 12px;
+	font-size: 24rpx;
 	color: #999;
-	margin-left: 10px;
 }
 
+.message.user .audio-duration {
+	color: rgba(255,255,255,0.8);
+}
+
+/* 建议芯片样式 */
+.action-chips {
+	display: flex;
+	flex-wrap: wrap;
+	margin-top: 20rpx;
+	gap: 20rpx;
+}
+
+.action-chip {
+	padding: 16rpx 24rpx;
+	background-color: #edf1f5;
+	border-radius: 30rpx;
+	font-size: 26rpx;
+	color: #2196f3;
+}
+
+/* 输入指示器样式 */
 .typing-indicator {
 	display: flex;
+	padding: 12rpx 20rpx;
 	align-items: center;
-	justify-content: center;
-	min-width: 50px;
-	padding: 15px;
+	margin-bottom: 30rpx;
 }
 
-.dot {
-	width: 8px;
-	height: 8px;
-	border-radius: 4px;
-	background-color: #999999;
-	margin: 0 3px;
-	animation: bounce 1.5s infinite ease-in-out;
+.typing-dot {
+	width: 16rpx;
+	height: 16rpx;
+	background-color: #999;
+	border-radius: 50%;
+	margin: 0 4rpx;
+	animation: typing-animation 1.5s infinite ease-in-out;
 }
 
-.dot:nth-child(1) {
-	animation-delay: 0s;
+.typing-dot:nth-child(2) {
+	animation-delay: 0.2s;
 }
 
-.dot:nth-child(2) {
-	animation-delay: 0.25s;
+.typing-dot:nth-child(3) {
+	animation-delay: 0.4s;
 }
 
-.dot:nth-child(3) {
-	animation-delay: 0.5s;
+@keyframes typing-animation {
+	0% { transform: translateY(0); }
+	50% { transform: translateY(-10rpx); }
+	100% { transform: translateY(0); }
 }
 
-@keyframes bounce {
-	0%, 60%, 100% {
-		transform: translateY(0);
-	}
-	30% {
-		transform: translateY(-5px);
-	}
-}
-
-.suggestion-chips {
-	padding: 10px;
-	white-space: nowrap;
-	background-color: #FFFFFF;
-	border-top: 1px solid #EAEAEA;
-}
-
-.chip {
-	display: inline-block;
-	padding: 8px 15px;
-	margin-right: 10px;
-	background-color: #E1F5FE;
-	border-radius: 20px;
-	font-size: 14px;
-	color: #1976D2;
-}
-
-.input-container {
-	display: flex;
-	padding: 10px 15px;
-	background-color: #FFFFFF;
-	border-top: 1px solid #EAEAEA;
-	align-items: center;
-}
-
-.input-buttons {
+/* 输入区域样式 */
+.chat-input-container {
+	padding: 20rpx 30rpx;
+	border-top: 1rpx solid #eee;
+	background-color: white;
 	display: flex;
 	align-items: center;
 }
 
-.input-button {
-	width: 36px;
-	height: 36px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-}
-
-.icon {
-	width: 30px;
-	height: 30px;
-	border-radius: 15px;
-	background-color: #F0F0F0;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-}
-
-.icon.active {
-	background-color: #1976D2;
-}
-
-.mic-icon {
-	width: 14px;
-	height: 14px;
-	border-radius: 7px;
-	background-color: #666666;
-	position: relative;
-}
-
-.mic-icon:after {
-	content: '';
-	position: absolute;
-	bottom: -3px;
-	left: 4px;
-	width: 6px;
-	height: 6px;
-	background-color: #666666;
-	border-radius: 3px;
-}
-
-.active .mic-icon,
-.active .mic-icon:after {
-	background-color: #FFFFFF;
-}
-
-.send-icon {
-	background-color: #1976D2;
-}
-
-.send-arrow {
-	width: 0;
-	height: 0;
-	border-top: 7px solid transparent;
-	border-left: 10px solid white;
-	border-bottom: 7px solid transparent;
-}
-
-.plus-icon {
-	position: relative;
-	width: 14px;
-	height: 2px;
-	background-color: #666666;
-}
-
-.plus-icon:after {
-	content: '';
-	position: absolute;
-	top: -6px;
-	left: 6px;
-	width: 2px;
-	height: 14px;
-	background-color: #666666;
-}
-
-.text-input {
+.chat-input {
 	flex: 1;
-	margin: 0 10px;
-	background-color: #F0F0F0;
-	border-radius: 20px;
-	padding: 0 15px;
-	height: 40px;
+	border: 1rpx solid #eee;
+	border-radius: 40rpx;
+	padding: 20rpx 30rpx;
+	font-size: 28rpx;
+	background-color: #f5f5f5;
+	margin: 0 20rpx;
 }
 
-.text-input input {
-	width: 100%;
-	height: 100%;
-	font-size: 16px;
-}
-
-.voice-input {
-	flex: 1;
-	margin: 0 10px;
-	background-color: #E1F5FE;
-	border-radius: 20px;
+.chat-send {
+	width: 80rpx;
+	height: 80rpx;
+	border-radius: 50%;
+	background-color: #2196f3;
+	color: white;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	height: 40px;
-	color: #1976D2;
-	font-size: 16px;
+	margin-left: 20rpx;
 }
 
+.chat-send .fa {
+	font-size: 32rpx;
+}
+
+.voice-button {
+	width: 50rpx;
+	height: 50rpx;
+	border-radius: 50%;
+	background-color: #2196f3;
+	color: white;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 24rpx;
+}
+
+/* 媒体选项样式 */
 .media-options {
 	position: absolute;
-	bottom: 70px;
-	right: 15px;
+	bottom: 140rpx;
+	right: 30rpx;
 	background-color: #FFFFFF;
-	border-radius: 10px;
-	box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-	padding: 10px;
+	border-radius: 20rpx;
+	box-shadow: 0 0 20rpx rgba(0, 0, 0, 0.1);
+	padding: 20rpx;
+	z-index: 100;
 }
 
 .media-option {
 	display: flex;
 	align-items: center;
-	padding: 10px;
-	border-bottom: 1px solid #EAEAEA;
+	padding: 20rpx;
+	border-bottom: 1rpx solid #EAEAEA;
 }
 
 .media-option:last-child {
@@ -791,57 +786,66 @@ export default {
 }
 
 .media-icon {
-	width: 30px;
-	height: 30px;
-	margin-right: 10px;
+	width: 60rpx;
+	height: 60rpx;
+	margin-right: 20rpx;
 	background-color: #F0F0F0;
-	border-radius: 15px;
+	border-radius: 30rpx;
 	display: flex;
 	align-items: center;
 	justify-content: center;
 }
 
-.image-icon:before {
-	content: '';
-	width: 15px;
-	height: 12px;
-	border: 2px solid #666666;
-	border-radius: 2px;
+/* 底部导航栏样式 */
+.navbar {
+	position: fixed;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	background-color: white;
+	display: flex;
+	justify-content: space-around;
+	padding: 24rpx 0 60rpx;
+	box-shadow: 0 -4rpx 20rpx rgba(0, 0, 0, 0.05);
+	z-index: 100;
 }
 
-.camera-icon:before {
-	content: '';
-	width: 15px;
-	height: 10px;
-	border: 2px solid #666666;
-	border-radius: 2px;
+.nav-item {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	color: #999;
+	font-size: 20rpx;
 }
 
-.camera-icon:after {
-	content: '';
-	position: absolute;
-	width: 6px;
-	height: 6px;
-	border: 1px solid #666666;
-	border-radius: 3px;
-	background-color: #F0F0F0;
+.nav-item .fa {
+	font-size: 44rpx;
+	margin-bottom: 8rpx;
 }
 
-.close-icon:before {
-	content: '';
-	width: 2px;
-	height: 15px;
-	background-color: #666666;
-	transform: rotate(45deg);
-	position: absolute;
+.nav-item.active {
+	color: #2196f3;
 }
 
-.close-icon:after {
-	content: '';
-	width: 2px;
-	height: 15px;
-	background-color: #666666;
-	transform: rotate(-45deg);
-	position: absolute;
+/* 字体图标样式 */
+.fa {
+	font-family: "FontAwesome";
 }
+.fa-home:before { content: "\f015"; }
+.fa-comment:before { content: "\f075"; }
+.fa-compass:before { content: "\f14e"; }
+.fa-user:before { content: "\f007"; }
+.fa-robot:before { content: "\f544"; }
+.fa-history:before { content: "\f1da"; }
+.fa-magic:before { content: "\f0d0"; }
+.fa-play:before { content: "\f04b"; }
+.fa-plus:before { content: "\f067"; }
+.fa-microphone:before { content: "\f130"; }
+.fa-paper-plane:before { content: "\f1d8"; }
+.fa-image:before { content: "\f03e"; }
+.fa-camera:before { content: "\f030"; }
+.fa-times:before { content: "\f00d"; }
+.fa-signal:before { content: "\f012"; }
+.fa-wifi:before { content: "\f1eb"; }
+.fa-battery-full:before { content: "\f240"; }
 </style> 

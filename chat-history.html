@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小智App - 聊天记录</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .page-header {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .back-button {
+            margin-right: 15px;
+            font-size: 18px;
+            color: var(--text-color);
+        }
+        
+        .page-title {
+            font-size: 18px;
+            font-weight: 600;
+            flex: 1;
+            text-align: center;
+            margin-right: 25px;
+        }
+        
+        .filter-button {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f5f5f5;
+            border-radius: 50%;
+            color: var(--text-color);
+        }
+        
+        .search-bar {
+            display: flex;
+            background-color: #f0f2f5;
+            border-radius: 10px;
+            padding: 10px 15px;
+            margin: 15px;
+            align-items: center;
+        }
+        
+        .search-bar i {
+            color: var(--light-text);
+            margin-right: 10px;
+        }
+        
+        .search-input {
+            border: none;
+            background: transparent;
+            flex: 1;
+            font-size: 14px;
+            color: var(--text-color);
+        }
+        
+        .date-divider {
+            text-align: center;
+            color: var(--light-text);
+            font-size: 14px;
+            margin: 20px 0;
+            position: relative;
+        }
+        
+        .date-divider::before, .date-divider::after {
+            content: "";
+            display: block;
+            width: 30%;
+            height: 1px;
+            background-color: #eee;
+            position: absolute;
+            top: 50%;
+        }
+        
+        .date-divider::before {
+            left: 5%;
+        }
+        
+        .date-divider::after {
+            right: 5%;
+        }
+        
+        .chat-session {
+            background-color: white;
+            border-radius: 12px;
+            margin: 10px 15px;
+            padding: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        .session-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .session-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #f0f5ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            color: var(--primary-color);
+        }
+        
+        .session-icon img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        
+        .session-info {
+            flex: 1;
+        }
+        
+        .session-title {
+            font-weight: 500;
+            margin: 0 0 3px 0;
+        }
+        
+        .session-time {
+            font-size: 12px;
+            color: var(--light-text);
+        }
+        
+        .session-preview {
+            color: var(--light-text);
+            font-size: 14px;
+            margin: 0;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 15px;
+        }
+        
+        .tab {
+            flex: 1;
+            text-align: center;
+            padding: 12px 0;
+            font-size: 15px;
+            color: var(--light-text);
+            position: relative;
+        }
+        
+        .tab.active {
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+        
+        .tab.active::after {
+            content: "";
+            display: block;
+            width: 20px;
+            height: 3px;
+            background-color: var(--primary-color);
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <!-- iOS Status Bar -->
+    <div class="status-bar">
+        <div class="time">9:41</div>
+        <div class="icons">
+            <i class="fas fa-signal"></i>
+            <i class="fas fa-wifi"></i>
+            <i class="fas fa-battery-full"></i>
+        </div>
+    </div>
+    
+    <!-- Page Header -->
+    <div class="page-header">
+        <a href="home.html" class="back-button">
+            <i class="fas fa-chevron-left"></i>
+        </a>
+        <div class="page-title">聊天记录</div>
+        <div class="filter-button">
+            <i class="fas fa-filter"></i>
+        </div>
+    </div>
+    
+    <!-- Tabs -->
+    <div class="tabs">
+        <div class="tab active">全部记录</div>
+        <div class="tab">问答类</div>
+        <div class="tab">故事类</div>
+        <div class="tab">游戏类</div>
+    </div>
+    
+    <!-- Search Bar -->
+    <div class="search-bar">
+        <i class="fas fa-search"></i>
+        <input type="text" class="search-input" placeholder="搜索聊天记录">
+    </div>
+    
+    <!-- Main Content Area -->
+    <div class="content">
+        <!-- Today's Chats -->
+        <div class="date-divider">今天</div>
+        
+        <div class="chat-session">
+            <div class="session-header">
+                <div class="session-icon">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <div class="session-info">
+                    <h3 class="session-title">恐龙知识问答</h3>
+                    <div class="session-time">10:24</div>
+                </div>
+            </div>
+            <p class="session-preview">小明: 霸王龙有多大？ 小智: 霸王龙是史前最大的陆地掠食动物之一，身长可达12米，站立高度约5米，体重可达8吨。它们生活在白垩纪晚期...</p>
+        </div>
+        
+        <div class="chat-session">
+            <div class="session-header">
+                <div class="session-icon">
+                    <i class="fas fa-book"></i>
+                </div>
+                <div class="session-info">
+                    <h3 class="session-title">睡前故事时间</h3>
+                    <div class="session-time">9:05</div>
+                </div>
+            </div>
+            <p class="session-preview">小明: 给我讲一个关于小兔子的故事 小智: 从前，有一只名叫跳跳的小兔子，它生活在一片美丽的森林里...</p>
+        </div>
+        
+        <!-- Yesterday's Chats -->
+        <div class="date-divider">昨天</div>
+        
+        <div class="chat-session">
+            <div class="session-header">
+                <div class="session-icon">
+                    <i class="fas fa-music"></i>
+                </div>
+                <div class="session-info">
+                    <h3 class="session-title">儿歌点播</h3>
+                    <div class="session-time">19:40</div>
+                </div>
+            </div>
+            <p class="session-preview">小明: 我想听小星星 小智: 好的，我来为你播放《小星星》 一闪一闪亮晶晶，满天都是小星星...</p>
+        </div>
+        
+        <div class="chat-session">
+            <div class="session-header">
+                <div class="session-icon">
+                    <i class="fas fa-gamepad"></i>
+                </div>
+                <div class="session-info">
+                    <h3 class="session-title">猜谜语游戏</h3>
+                    <div class="session-time">16:12</div>
+                </div>
+            </div>
+            <p class="session-preview">小智: 我来出一个谜语，什么东西有头无脚？ 小明: 是钉子吗？ 小智: 不对，再猜猜看！ 小明: 是床吗？...</p>
+        </div>
+        
+        <!-- Older Chats -->
+        <div class="date-divider">6月10日</div>
+        
+        <div class="chat-session">
+            <div class="session-header">
+                <div class="session-icon">
+                    <i class="fas fa-calculator"></i>
+                </div>
+                <div class="session-info">
+                    <h3 class="session-title">数学练习</h3>
+                    <div class="session-time">15:30</div>
+                </div>
+            </div>
+            <p class="session-preview">小明: 5+7等于多少？ 小智: 5+7=12 小明: 那8+6呢？ 小智: 8+6=14 小明: 谢谢小智！...</p>
+        </div>
+    </div>
+</body>
+</html> 
